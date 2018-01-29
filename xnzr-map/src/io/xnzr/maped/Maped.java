@@ -27,6 +27,8 @@ public class Maped {
     private BufferedImage radioSourceImage;
     private MapInfo curMap;
     private Preferences userPrefs;
+    private BufferedImage mapImage;
+    private double scale = 1;
 
     private final int SOURCE_WIDTH = 50;
     private final int SOURCE_HEIGHT = 50;
@@ -78,7 +80,7 @@ public class Maped {
 
     private void createToolbox() {
         toolBox = new JPanel();
-        toolBox.setLayout(new BoxLayout(toolBox, BoxLayout.Y_AXIS));
+        toolBox.setLayout(new BoxLayout(toolBox, BoxLayout.X_AXIS));
         bOpenImage = new JButton("Open");
         bOpenImage.addActionListener(e -> {
             label.setText("loading image...");
@@ -118,7 +120,7 @@ public class Maped {
         });
         toolBox.add(bSaveMap);
 
-        frame.add(toolBox, BorderLayout.EAST);
+        frame.add(toolBox, BorderLayout.NORTH);
     }
 
     private void createImageLoader() {
@@ -138,18 +140,32 @@ public class Maped {
             loadMap(path);
             frame.revalidate();
             label.setText("Image loaded");
+            imageLoader.setVisible(false);
         });
     }
 
     private void addRadioSource(int x, int y) {
+        createRadioSourceView(x, y);
+
+        RadioSource data = new RadioSource((double)x/clientSpace.getWidth(), (double)y/clientSpace.getHeight());
+        curMap.addRadioSource(data);
+    }
+
+    private void createRadioSourceView(int x, int y) {
         JRadioSourceView pic = new JRadioSourceView(radioSourceImage);
         pic.setSize(SOURCE_WIDTH, SOURCE_HEIGHT);
         pic.setLocation(x, y);
         clientSpace.add(pic);
         sourceComponents.add(pic);
+    }
 
-        RadioSource data = new RadioSource((double)x/clientSpace.getWidth(), (double)y/clientSpace.getHeight());
-        curMap.addRadioSource(data);
+    private void showRadioSources() {
+        for (RadioSource r: curMap.getRadioSources()) {
+            int x = (int)(r.getX()*mapImage.getWidth()*scale);
+            int y = (int)(r.getY()*mapImage.getHeight()*scale);
+            createRadioSourceView(x, y);
+//            createRadioSourceView(0, 0);
+        }
     }
 
 
@@ -192,9 +208,9 @@ public class Maped {
             curMap = MapInfo.loadFromXml(path);
             ByteArrayInputStream bis = new ByteArrayInputStream(curMap.getMap());
 
-            BufferedImage img;
-            img = ImageIO.read(bis);
-            setupImage(img);
+            mapImage = ImageIO.read(bis);
+            setupImage();
+            showRadioSources();
         } catch (IOException e) {
             e.printStackTrace();
             label.setText("Could not open file " + path);
@@ -202,34 +218,33 @@ public class Maped {
     }
 
     private void loadImage(String path) {
-        BufferedImage img;
         try {
-            img = ImageIO.read(new File(path));
+            mapImage = ImageIO.read(new File(path));
 
             curMap = new MapInfo();
             byte [] data = Files.readAllBytes(Paths.get(path));
             curMap.setMap(data);
-            curMap.setHeight(img.getHeight());
-            curMap.setWidth(img.getWidth());
+            curMap.setHeight(mapImage.getHeight());
+            curMap.setWidth(mapImage.getWidth());
 
-            setupImage(img);
+            setupImage();
         } catch (IOException e) {
             e.printStackTrace();
             label.setText("Image load failed");
         }
     }
 
-    private void setupImage(BufferedImage img) {
+    private void setupImage() {
         frame.remove(clientSpace);
         clientSpace = new JPanel() {
             @Override
             public void paintComponent(Graphics g) {
                 Graphics2D g2d = (Graphics2D) g;
-                double scaleWidth = (double) getWidth() / img.getWidth();
-                double scaleHeight = (double) getHeight() / img.getHeight();
-                double scale = Math.min(scaleWidth, scaleHeight);
+                double scaleWidth = (double) getWidth() / mapImage.getWidth();
+                double scaleHeight = (double) getHeight() / mapImage.getHeight();
+                scale = Math.min(scaleWidth, scaleHeight);
                 g2d.scale(scale, scale);
-                g2d.drawImage(img, 0, 0, null);
+                g2d.drawImage(mapImage, 0, 0, null);
                 super.paintComponents(g);
             }
         };

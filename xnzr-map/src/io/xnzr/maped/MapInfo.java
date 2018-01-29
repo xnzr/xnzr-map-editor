@@ -1,29 +1,30 @@
 package io.xnzr.maped;
 
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.xml.DomDriver;
+
 import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
 import java.io.*;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Base64;
 
 
 public class MapInfo {
     static void saveToXml(String dstPath, MapInfo mapInfo) throws IOException {
-        FileOutputStream fs = new FileOutputStream(dstPath);
-        XMLEncoder encoder = new XMLEncoder(fs);
-        encoder.setExceptionListener(e -> System.out.println("Exception! Details: " + e.toString()));
-        encoder.writeObject(mapInfo);
-        encoder.close();
-        fs.close();
+        XStream xstream = new XStream(new DomDriver());
+        String xml = xstream.toXML(mapInfo);
+
+//        MapInfo t = (MapInfo)xstream.fromXML(xml);
+        try (PrintWriter out = new PrintWriter(dstPath)) {
+            out.println(xml);
+        }
     }
 
     static MapInfo loadFromXml(String path) throws IOException {
-        FileInputStream fs = new FileInputStream(path);
-        XMLDecoder decoder = new XMLDecoder(fs);
-        MapInfo res = (MapInfo) decoder.readObject();
-        decoder.close();
-        fs.close();
-        return res;
+        XStream xstream = new XStream(new DomDriver());
+        return (MapInfo)xstream.fromXML(new File(path));
     }
 
     public MapInfo() {
@@ -33,11 +34,11 @@ public class MapInfo {
 
     private ArrayList<RadioSource> radioSources;
 
-    ArrayList<RadioSource> getRadioSources() {
+    public ArrayList<RadioSource> getRadioSources() {
         return radioSources;
     }
 
-    void setRadioSources(ArrayList<RadioSource> radioSources) {
+    public void setRadioSources(ArrayList<RadioSource> radioSources) {
         this.radioSources = radioSources;
     }
 
