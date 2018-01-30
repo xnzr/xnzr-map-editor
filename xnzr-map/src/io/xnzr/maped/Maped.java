@@ -82,10 +82,6 @@ public class Maped {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-//        for (int i = 0; i < 5; i++) {
-//            addRadioSource(i * 70, i * 70);
-//        }
     }
 
     private void createClientSpace() {
@@ -99,7 +95,6 @@ public class Maped {
         clientSpace.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                label.setText("click");
                 switch (state) {
                     case Common:
                         break;
@@ -117,7 +112,6 @@ public class Maped {
 
             @Override
             public void mousePressed(MouseEvent e) {
-                label.setText("press");
 
             }
 
@@ -143,7 +137,8 @@ public class Maped {
         bOpen = new JButton("Open");
         bOpen.addActionListener(e -> {
             label.setText("loading image...");
-            toolBox.add(imageLoader);
+            //toolBox.add(imageLoader);
+            imageLoader.doAction();
         });
 
         mapPicker = new JFilePicker("Map", "Browse");
@@ -154,7 +149,7 @@ public class Maped {
         JButton bSave = new JButton("Save");
         bSave.addActionListener(e -> {
             label.setText("Saving...");
-            toolBox.add(mapPicker);
+//            toolBox.add(mapPicker);
             String p = userPrefs.get(PREFS_KEY_LAST_SAVE_PATH, null);
             if (p != null) {
                 mapPicker.setCurrentDirectory(p);
@@ -170,6 +165,7 @@ public class Maped {
                     label.setText("Failed to save " + path);
                 }
             });
+            mapPicker.doAction();
         });
 
         JButton bSetSource = new JButton("Source");
@@ -214,8 +210,9 @@ public class Maped {
     private void addRadioSource(int x, int y) {
         createRadioSourceView(x, y);
 
-//        RadioSource data = new RadioSource((double)x/clientSpace.getWidth(), (double)y/clientSpace.getHeight());
-//        curMap.addRadioSource(data);
+
+        RadioSource data = new RadioSource((double)x/mapImage.getWidth(), (double)y/mapImage.getHeight());
+        curMap.addRadioSource(data);
     }
 
     private void createRadioSourceView(int x, int y) {
@@ -225,11 +222,9 @@ public class Maped {
         double scaledY = y/scale;
         pic.setLocation((int) (scaledX), (int) (scaledY));
         clientSpace.add(pic);
-        frame.revalidate();
         sourceComponents.add(pic);
-
-        RadioSource data = new RadioSource((double)x/mapImage.getWidth(), (double)y/mapImage.getHeight());
-        curMap.addRadioSource(data);
+        clientSpace.revalidate();
+        clientSpace.repaint();
     }
 
     private void showRadioSources() {
