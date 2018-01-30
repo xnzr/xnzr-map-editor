@@ -3,12 +3,10 @@ package io.xnzr.maped;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 
-import java.beans.XMLDecoder;
-import java.beans.XMLEncoder;
 import java.io.*;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.concurrent.*;
 
 
 public class MapInfo {
@@ -16,7 +14,6 @@ public class MapInfo {
         XStream xstream = new XStream(new DomDriver());
         String xml = xstream.toXML(mapInfo);
 
-//        MapInfo t = (MapInfo)xstream.fromXML(xml);
         try (PrintWriter out = new PrintWriter(dstPath)) {
             out.println(xml);
         }
@@ -27,18 +24,18 @@ public class MapInfo {
         return (MapInfo)xstream.fromXML(new File(path));
     }
 
-    public MapInfo() {
-        radioSources = new ArrayList<>();
+    MapInfo() {
+        radioSources = new CopyOnWriteArrayList<>();
     }
 
 
-    private ArrayList<RadioSource> radioSources;
+    private CopyOnWriteArrayList<RadioSource> radioSources;
 
-    public ArrayList<RadioSource> getRadioSources() {
+    public CopyOnWriteArrayList<RadioSource> getRadioSources() {
         return radioSources;
     }
 
-    public void setRadioSources(ArrayList<RadioSource> radioSources) {
+    public void setRadioSources(CopyOnWriteArrayList<RadioSource> radioSources) {
         this.radioSources = radioSources;
     }
 

@@ -2,7 +2,10 @@ package io.xnzr.maped;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.tools.Tool;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -10,15 +13,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.prefs.Preferences;
 
 public class Maped {
-    public static final String RES_ICON_IBEACON_96_PNG = "res/icons8-ibeacon-96.png";
+    private static final String RES_ICON_IBEACON_96_PNG = "res/icons8-ibeacon-96.png";
     private JPanel panel;
     private JPanel clientSpace;
-    private JPanel toolBox;
+    private JToolBar toolBox;
     private JLabel label;
-    private JButton bOpenImage;
+    private JButton bOpen;
     private final JFrame frame;
     private BorderLayout borderLayout;
     private JFilePicker imageLoader;
@@ -37,6 +41,14 @@ public class Maped {
 
     private final String PREFS_KEY_LAST_LOAD_PATH = "prefs_last_load_path";
     private final String PREFS_KEY_LAST_SAVE_PATH = "prefs_last_save_path";
+
+    private enum State {
+        Common,
+        SetSource,
+        DragSource
+    }
+
+    private State state = State.Common;
 
     private Maped() {
         sourceComponents = new ArrayList<>();
@@ -58,9 +70,7 @@ public class Maped {
         label = new JLabel("Image!");
         frame.add(label, BorderLayout.SOUTH);
 
-        clientSpace = new JPanel();
-        clientSpace.setLayout(null);
-        frame.add(clientSpace, BorderLayout.CENTER);
+        createClientSpace();
 
         createImageLoader();
         createToolbox();
@@ -73,33 +83,76 @@ public class Maped {
             e.printStackTrace();
         }
 
-        for (int i = 0; i < 5; i++) {
-            addRadioSource(i * 70, i * 70);
-        }
+//        for (int i = 0; i < 5; i++) {
+//            addRadioSource(i * 70, i * 70);
+//        }
+    }
+
+    private void createClientSpace() {
+        clientSpace = new JPanel();
+        clientSpace.setLayout(null);
+        listenMouse();
+        frame.add(clientSpace, BorderLayout.CENTER);
+    }
+
+    private void listenMouse() {
+        clientSpace.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                label.setText("click");
+                switch (state) {
+                    case Common:
+                        break;
+                    case SetSource:
+                        label.setText("Radio source successfully set.");
+                        state = State.Common;
+                        Point p = clientSpace.getMousePosition();
+                        addRadioSource(p.x, p.y);
+                        clientSpace.setCursor(Cursor.getDefaultCursor());
+                        break;
+                    case DragSource:
+                        break;
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                label.setText("press");
+
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
     }
 
     private void createToolbox() {
-        toolBox = new JPanel();
+        toolBox = new JToolBar();
         toolBox.setLayout(new BoxLayout(toolBox, BoxLayout.X_AXIS));
-        bOpenImage = new JButton("Open");
-        bOpenImage.addActionListener(e -> {
+        bOpen = new JButton("Open");
+        bOpen.addActionListener(e -> {
             label.setText("loading image...");
             toolBox.add(imageLoader);
         });
-        toolBox.add(bOpenImage);
-        JButton bSetSource = new JButton("Source");
-        bSetSource.addActionListener(e -> {
-            label.setText("Setting source...");
-        });
-        toolBox.add(bSetSource);
 
         mapPicker = new JFilePicker("Map", "Browse");
         mapPicker.setAcceptAllFileFilterUsed(false);
         mapPicker.addFileTypeFilter(MAP_EXTENSION, "xnzr indoor map");
 
 
-        JButton bSaveMap = new JButton("Save map");
-        bSaveMap.addActionListener(e -> {
+        JButton bSave = new JButton("Save");
+        bSave.addActionListener(e -> {
             label.setText("Saving...");
             toolBox.add(mapPicker);
             String p = userPrefs.get(PREFS_KEY_LAST_SAVE_PATH, null);
@@ -118,7 +171,21 @@ public class Maped {
                 }
             });
         });
-        toolBox.add(bSaveMap);
+
+        JButton bSetSource = new JButton("Source");
+        bSetSource.addActionListener(e -> {
+            state = State.SetSource;
+            Point hotspot = new Point(0,0);
+            Cursor cursor = Toolkit.getDefaultToolkit().createCustomCursor(radioSourceImage, hotspot, "radio_cursor");
+            clientSpace.setCursor(cursor);
+            label.setText("Setting source...");
+        });
+
+        toolBox.add(bOpen);
+        toolBox.add(bSave);
+        toolBox.addSeparator();
+        toolBox.add(bSetSource);
+
 
         frame.add(toolBox, BorderLayout.NORTH);
     }
@@ -127,9 +194,9 @@ public class Maped {
         imageLoader = new JFilePicker("Pick a file", "Browse...");
         imageLoader.setAcceptAllFileFilterUsed(false);
         imageLoader.setMode(JFilePicker.MODE_OPEN);
+        imageLoader.addFileTypeFilter(MAP_EXTENSION, "XNZR map");
         imageLoader.addFileTypeFilter(".jpg", "JPEG Images");
         imageLoader.addFileTypeFilter(".png", "PNG Images");
-        imageLoader.addFileTypeFilter(MAP_EXTENSION, "XNZR map");
         String curLoadPath = userPrefs.get(PREFS_KEY_LAST_LOAD_PATH, "");
         if (!curLoadPath.equals("")) {
             imageLoader.setCurrentDirectory(curLoadPath);
@@ -147,22 +214,29 @@ public class Maped {
     private void addRadioSource(int x, int y) {
         createRadioSourceView(x, y);
 
-        RadioSource data = new RadioSource((double)x/clientSpace.getWidth(), (double)y/clientSpace.getHeight());
-        curMap.addRadioSource(data);
+//        RadioSource data = new RadioSource((double)x/clientSpace.getWidth(), (double)y/clientSpace.getHeight());
+//        curMap.addRadioSource(data);
     }
 
     private void createRadioSourceView(int x, int y) {
         JRadioSourceView pic = new JRadioSourceView(radioSourceImage);
-        pic.setSize(SOURCE_WIDTH, SOURCE_HEIGHT);
-        pic.setLocation(x, y);
+        pic.setSize((int)(SOURCE_WIDTH*scale), (int)(SOURCE_HEIGHT*scale));
+        double scaledX = x/scale;
+        double scaledY = y/scale;
+        pic.setLocation((int) (scaledX), (int) (scaledY));
         clientSpace.add(pic);
+        frame.revalidate();
         sourceComponents.add(pic);
+
+        RadioSource data = new RadioSource((double)x/mapImage.getWidth(), (double)y/mapImage.getHeight());
+        curMap.addRadioSource(data);
     }
 
     private void showRadioSources() {
         for (RadioSource r: curMap.getRadioSources()) {
-            int x = (int)(r.getX()*mapImage.getWidth()*scale);
-            int y = (int)(r.getY()*mapImage.getHeight()*scale);
+            int x = (int)(r.getX()*mapImage.getWidth());
+            int y = (int)(r.getY()*mapImage.getHeight());
+
             createRadioSourceView(x, y);
 //            createRadioSourceView(0, 0);
         }
@@ -248,6 +322,7 @@ public class Maped {
                 super.paintComponents(g);
             }
         };
+        listenMouse();
         clientSpace.setLayout(null);
         frame.add(clientSpace, BorderLayout.CENTER);
     }
