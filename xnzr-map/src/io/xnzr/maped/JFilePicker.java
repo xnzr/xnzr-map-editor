@@ -46,12 +46,7 @@ public class JFilePicker extends JPanel {
 
         callbackList = new ArrayList<>();
 
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent evt) {
-                doAction();
-            }
-        });
+        button.addActionListener(evt -> doAction());
 
         add(label);
         add(textField);

@@ -75,7 +75,7 @@ public class Maped {
         createImageLoader();
         createToolbox();
 
-        loadImage("D:\\Programming\\Outsourcing\\xnzr\\maps\\8_0.jpg");
+        //loadImage("D:\\Programming\\Outsourcing\\xnzr\\maps\\8_0.jpg");
 
         try {
             radioSourceImage = ImageIO.read(new File(RES_ICON_IBEACON_96_PNG));
