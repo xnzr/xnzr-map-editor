@@ -241,7 +241,7 @@ public class Maped {
     private void loadMap(String path) {
         switch (getMapType(path)) {
             case Picture:
-                loadMap(path);
+                loadImage(path);
                 break;
             case MapInfo:
                 loadMapInfo(path);

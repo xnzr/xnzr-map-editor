@@ -10,8 +10,12 @@ import java.util.concurrent.*;
 
 
 public class MapInfo {
+    private static final String ROOT_NODE = "MapInfo";
+    private static final String RADIO_SOURCE_NODE = "RadioSource";
     static void saveToXml(String dstPath, MapInfo mapInfo) throws IOException {
         XStream xstream = new XStream(new DomDriver());
+        xstream.alias(ROOT_NODE, MapInfo.class);
+        xstream.alias(RADIO_SOURCE_NODE, RadioSource.class);
         String xml = xstream.toXML(mapInfo);
 
         try (PrintWriter out = new PrintWriter(dstPath)) {
@@ -21,6 +25,8 @@ public class MapInfo {
 
     static MapInfo loadFromXml(String path) throws IOException {
         XStream xstream = new XStream(new DomDriver());
+        xstream.alias(ROOT_NODE, MapInfo.class);
+        xstream.alias(RADIO_SOURCE_NODE, RadioSource.class);
         return (MapInfo)xstream.fromXML(new File(path));
     }
 
