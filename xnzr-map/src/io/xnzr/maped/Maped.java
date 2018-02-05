@@ -54,7 +54,6 @@ public class Maped {
         sourceComponents = new ArrayList<>();
         userPrefs = Preferences.userNodeForPackage(this.getClass());
         frame = new JFrame("Indoor map");
-//        frame.setContentPane(panel);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setResizable(true);
         frame.setSize(800, 800);
@@ -74,8 +73,6 @@ public class Maped {
 
         createImageLoader();
         createToolbox();
-
-        //loadImage("D:\\Programming\\Outsourcing\\xnzr\\maps\\8_0.jpg");
 
         try {
             radioSourceImage = ImageIO.read(new File(RES_ICON_IBEACON_96_PNG));
@@ -171,9 +168,10 @@ public class Maped {
         JButton bSetSource = new JButton("Source");
         bSetSource.addActionListener(e -> {
             state = State.SetSource;
-            Point hotspot = new Point(0,0);
-            Cursor cursor = Toolkit.getDefaultToolkit().createCustomCursor(radioSourceImage, hotspot, "radio_cursor");
-            clientSpace.setCursor(cursor);
+//            Point hotspot = new Point(radioSourceImage.getWidth()/2,radioSourceImage.getHeight()/2);
+//            Cursor cursor = Toolkit.getDefaultToolkit().createCustomCursor(radioSourceImage, hotspot, "radio_cursor");
+//            clientSpace.setCursor(cursor);
+            clientSpace.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
             label.setText("Setting source...");
         });
 
@@ -208,6 +206,11 @@ public class Maped {
     }
 
     private void addRadioSource(int x, int y) {
+        //We need to adjust coordinates to the center of cursor icon.
+
+        int dx = (int) (scale*radioSourceImage.getWidth() / 2);
+        int dy = (int) (scale*radioSourceImage.getHeight() / 2);
+//        createRadioSourceView(x + dx, y + dy);
         createRadioSourceView(x, y);
 
 
@@ -217,9 +220,10 @@ public class Maped {
 
     private void createRadioSourceView(int x, int y) {
         JRadioSourceView pic = new JRadioSourceView(radioSourceImage);
-        pic.setSize((int)(SOURCE_WIDTH*scale), (int)(SOURCE_HEIGHT*scale));
-        double scaledX = x/scale;
-        double scaledY = y/scale;
+//        pic.setSize((int)(SOURCE_WIDTH*scale), (int)(SOURCE_HEIGHT*scale));
+        pic.setSize((int)(SOURCE_WIDTH), (int)(SOURCE_HEIGHT));
+        double scaledX = x/scale - pic.getWidth()/2;
+        double scaledY = y/scale - pic.getHeight()/2;
         pic.setLocation((int) (scaledX), (int) (scaledY));
         clientSpace.add(pic);
         sourceComponents.add(pic);
